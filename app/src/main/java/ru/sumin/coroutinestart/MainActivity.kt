@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.postDelayed
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.sumin.coroutinestart.databinding.ActivityMainBinding
@@ -32,17 +34,13 @@ class MainActivity : AppCompatActivity() {
                 progress.isVisible = true
                 buttonLoad.isEnabled = false
 
-                val loadCity = lifecycleScope.launch {
-                    val city = loadCity()
-                    tvLocation.text = city
-                }
-                val loadTemp = lifecycleScope.launch {
-                    val temp = loadTemperature()
-                    tvTemperature.text = temp.toString()
-                }
+                val deferredCity: Deferred<String> = lifecycleScope.async { loadCity() }
+                val deferredTemp: Deferred<Int> = lifecycleScope.async { loadTemperature() }
                 lifecycleScope.launch {
-                    loadCity.join()
-                    loadTemp.join()
+                    val city = deferredCity.await()
+                    val temp = deferredTemp.await().toString()
+                    tvLocation.text = city
+                    tvTemperature.text = temp
                     progress.isVisible = false
                     buttonLoad.isEnabled = true
                 }
